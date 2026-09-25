@@ -3,13 +3,14 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from common import df_filtered, get_filtered_df, update_filters
 
-# Streamlit page configuration
 st.set_page_config(
     page_title="Rugby Analytics Dashboard",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
 
 # Custom CSS: Forces Streamlit border containers to have solid white background & custom shadow
 st.markdown(
@@ -82,89 +83,71 @@ css = """
 st.html(f"<style>{css}</style>")
 
 
-# --- LOAD DATA FROM THE 'data/' FOLDER ---
-@st.cache_data(ttl=300)
-def load_data_from_folder(folder_path="data"):
-  path = Path(folder_path)
-  if not path.exists() or not path.is_dir():
-    return pd.DataFrame()
+# # --- LOAD DATA FROM THE 'data/' FOLDER ---
+# @st.cache_data(ttl=300)
+# def load_data_from_folder(folder_path="data"):
+#   path = Path(folder_path)
+#   if not path.exists() or not path.is_dir():
+#     return pd.DataFrame()
 
-  csv_files = list(path.glob("*.csv"))
-  if not csv_files:
-    return pd.DataFrame()
+#   csv_files = list(path.glob("*.csv"))
+#   if not csv_files:
+#     return pd.DataFrame()
 
-  dfs = []
-  for f in csv_files:
-    try:
-      temp_df = pd.read_csv(f)
-      temp_df["source_filename"] = f.name
-      dfs.append(temp_df)
-    except Exception as e:
-      st.sidebar.error(f"Read error: {f.name}")
+#   dfs = []
+#   for f in csv_files:
+#     try:
+#       temp_df = pd.read_csv(f)
+#       temp_df["source_filename"] = f.name
+#       dfs.append(temp_df)
+#     except Exception as e:
+#       st.sidebar.error(f"Read error: {f.name}")
 
-  if dfs:
-    return pd.concat(dfs, ignore_index=True)
-  return pd.DataFrame()
+#   if dfs:
+#     return pd.concat(dfs, ignore_index=True)
+#   return pd.DataFrame()
 
 
-# Initial load
-df_raw = load_data_from_folder("data")
+# # Initial load
+# df_raw = load_data_from_folder("data")
 
-if df_raw.empty:
-  st.warning("No CSV files were found in the `/data` folder.")
-  st.stop()
+# if df_raw.empty:
+#   st.warning("No CSV files were found in the `/data` folder.")
+#   st.stop()
 
-# --- INTERACTIVE FILTERS (SIDEBAR) ---
-st.sidebar.header("Filters")
+# # --- INTERACTIVE FILTERS (SIDEBAR) ---
+# st.sidebar.header("Filters")
 
-df_filtered = df_raw.copy()
+# df_filtered = df_raw.copy()
 
-# Filter: Opponent
-selected_opp = []
-if "opposition" in df_filtered.columns:
-  opponents = [x for x in df_filtered["opposition"].dropna().unique().tolist()]
-  selected_opp = st.sidebar.multiselect("Opponent", opponents, select_all=True)
-  if selected_opp:
-    df_filtered = df_filtered[df_filtered["opposition"].isin(selected_opp)]
+# # Filter: Opponent
+# selected_opp = []
+# if "opposition" in df_filtered.columns:
+#   opponents = [x for x in df_filtered["opposition"].dropna().unique().tolist()]
+#   selected_opp = st.sidebar.multiselect("Opponent", opponents,key="opponent", select_all=True, default=st.session_state.get("opponent"), on_change=update_filters)
+#   if selected_opp:
+#     df_filtered = df_filtered[df_filtered["opposition"].isin(selected_opp)]
 
-# Filter: Tournament
-selected_tournament = []
-if "tournament" in df_filtered.columns:
-  tournaments = [
-      x for x in df_filtered["tournament"].dropna().unique().tolist()
-  ]
-  selected_tournament = st.sidebar.multiselect("Tournament", tournaments)
-  if selected_tournament:
-    df_filtered = df_filtered[
-        df_filtered["tournament"].isin(selected_tournament)
-    ]
+# # Filter: Tournament
+# selected_tournament = []
+# if "tournament" in df_filtered.columns:
+#   tournaments = [
+#       x for x in df_filtered["tournament"].dropna().unique().tolist()
+#   ]
+#   selected_tournament = st.sidebar.multiselect("Tournament", tournaments, key="tournament", select_all=True, default=st.session_state.get("tournament"), on_change=update_filters)
+#   if selected_tournament:
+#     df_filtered = df_filtered[
+#         df_filtered["tournament"].isin(selected_tournament)
+#     ]
 
-# Stage / Tournament Info Display
-match_title = (
-    f"Match Analysis: Denmark vs {df_filtered['opposition'].iloc[0]}"
-    if len(selected_opp) == 1
-    and not df_filtered.empty
-    and "opposition" in df_filtered.columns
-    else "Match Performance Overview"
-)
-tournament_info = (
-    f"{df_filtered['tournament'].iloc[0]} ({df_filtered['stage'].iloc[0]})"
-    if len(selected_tournament) == 1
-    and not df_filtered.empty
-    and "tournament" in df_filtered.columns
-    and "stage" in df_filtered.columns
-    else ""
-)
+
 
 # -----------------------------------------------------------------------------
 # DASHBOARD HEADER
 # -----------------------------------------------------------------------------
-st.title(f"{match_title}")
-if tournament_info:
-  st.caption(f"**Tournament:** {tournament_info}")
+st.title("KPIs")
 
-st.markdown("---")
-
+df_filtered = get_filtered_df()
 # -----------------------------------------------------------------------------
 # DYNAMIC SCORE CALCULATION & SCOREBOARD BANNER
 # -----------------------------------------------------------------------------
@@ -474,7 +457,7 @@ with row2_col2:
       )
 
     with card_col_right:
-        labels = ["Try", "Penalty For", "Set Pieces Kept", "Open Play Kick", "Turnover Lost", "Penalty Against"]
+        labels = ["Try", "Penalty For", "Set Piece Kept", "Open Play Kick", "Turnover Lost", "Penalty Against"]
         values = [tries, penalties_for, set_pieces_kept, open_play_kicks, turnovers_lost, penalties_against]
         colors = [
           "#FF1E1E",
