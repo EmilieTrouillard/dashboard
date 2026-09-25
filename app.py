@@ -69,13 +69,13 @@ st.markdown("---")
 
 pages = {
   "Game": [
-    st.Page("pages/KPIs.py", title = "KPIs"),
-    st.Page("pages/Game.py", title = "Game Data Overview"),
+    st.Page("pages/kpis.py", title = "KPIs"),
+    st.Page("pages/game.py", title = "Game Data Overview"),
   ],
   "Players": []
 }
 pages_list = [
-    st.Page("pages/KPIs.py", title = "KPIs"),
-    st.Page("pages/Game.py", title = "Game Data Overview"),
+    st.Page("pages/kpis.py", title = "KPIs"),
+    st.Page("pages/game.py", title = "Game Data Overview"),
   ]
 st.navigation(pages_list, position='top').run()

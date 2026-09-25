@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from common import df_filtered, get_filtered_df, update_filters
+from common import get_filtered_df, update_filters
 
 st.set_page_config(
     page_title="Rugby Analytics Dashboard",
