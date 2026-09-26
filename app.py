@@ -12,7 +12,6 @@ st.set_page_config(
 )
 
 
-
 # Custom CSS for KPI Container Cards (Styles st.container(border=True) directly)
 st.markdown(
     """
@@ -41,7 +40,6 @@ st.markdown(
 )
 
 
-
 # Stage / Tournament Info Display
 match_title = (
     f"Match Analysis: Denmark vs {st.session_state.get("opponent")[0]}"
@@ -60,7 +58,7 @@ tournament_info = (
 # -----------------------------------------------------------------------------
 st.title(f"{match_title}")
 if tournament_info:
-  st.caption(f"**Tournament:** {tournament_info}")
+    st.caption(f"**Tournament:** {tournament_info}")
 
 st.markdown("---")
 
@@ -68,14 +66,14 @@ st.markdown("---")
 
 
 pages = {
-  "Game": [
-    st.Page("pages/kpis.py", title = "KPIs"),
-    st.Page("pages/game.py", title = "Game Data Overview"),
-  ],
-  "Players": []
+    "Game": [
+        st.Page("pages/kpis.py", title="KPIs"),
+        st.Page("pages/game.py", title="Game Data Overview"),
+    ],
+    "Players": [],
 }
 pages_list = [
-    st.Page("pages/kpis.py", title = "KPIs"),
-    st.Page("pages/game.py", title = "Game Data Overview"),
-  ]
-st.navigation(pages_list, position='top').run()
+    st.Page("pages/kpis.py", title="KPIs"),
+    st.Page("pages/game.py", title="Game Data Overview"),
+]
+st.navigation(pages_list, position="top").run()

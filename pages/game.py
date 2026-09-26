@@ -1,6 +1,7 @@
 from pathlib import Path
 import pandas as pd
 import streamlit as st
+import plotly.express as px
 
 from common import get_filtered_df
 
@@ -67,7 +68,7 @@ opponent_name = (
     if "opposition" in df_filtered.columns
     and not df_filtered.empty
     and len(st.session_state.get("opponent") or []) == 1
-    else "OPP"
+    else "Opposition"
 )
 tries = (
     df_filtered[df_filtered["event_type"] == "Try"]
@@ -232,3 +233,139 @@ for i, item in enumerate(metrics_data):
         """,
             unsafe_allow_html=True,
         )
+
+# --- 1. FILTER & PREPARE DATA ---
+tries_df = df_filtered[df_filtered["event_type"] == "Try"].copy()
+
+if not tries_df.empty:
+    st.subheader("Try Source & Phases")
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        # Aggregate counts by Origin, and Phase
+        dk_tries = tries_df[tries_df["end_possession"] == "Denmark"]
+        grouped = (
+            dk_tries.groupby(["origin", "phases"]).size().reset_index(name="count")
+        )
+
+        # Combine end_possession and origin for clear x-axis labels
+        # Example label: "Kick Receipt<br>Denmark"
+        grouped["x_label"] = grouped["origin"]
+
+        # Convert phases to string for categorical color discrete mapping
+        grouped["phases"] = grouped["phases"].astype(int).astype(str)
+
+        # Define color palette matching the design (1: Solid Red, 2: Light Red/Pink, 3: Brown/Taupe)
+        color_map = {"1": "#FF0000", "2": "#FF9999", "3": "#AA8888", "4+": "#666666"}
+
+        # --- 2. BUILD PLOTLY CHART ---
+        fig = px.bar(
+            grouped,
+            x="x_label",
+            y="count",
+            color="phases",
+            text="count",
+            title="<b>Denmark</b>",
+            color_discrete_map=color_map,
+            barmode="stack",
+            category_orders={"phases": sorted(grouped["phases"].unique())},
+        )
+
+        # --- 3. CUSTOMIZE LAYOUT & STYLING ---
+        fig.update_traces(
+            textposition="inside",
+            insidetextanchor="middle",
+            textfont=dict(size=14, color="white", family="Arial Black"),
+        )
+
+        fig.update_layout(
+            xaxis_title=None,
+            yaxis_title=None,
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.25,
+                xanchor="center",
+                x=0.5,
+                title=dict(text="<b>Phases</b>"),
+            ),
+            font=dict(color="#333333"),
+            title=dict(x=0.5, xanchor="center", font=dict(size=20)),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            height=380,
+            margin=dict(l=20, r=20, t=50, b=80),
+        )
+
+        # Hide y-axis lines/labels for clean aesthetic
+        fig.update_yaxes(showticklabels=False, showgrid=False, zeroline=False)
+        fig.update_xaxes(showgrid=False)
+
+        # Render in Streamlit
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+    with col2:
+        # Aggregate counts by Origin, and Phase
+        opp_tries = tries_df[tries_df["end_possession"] == "Opposition"]
+        grouped = (
+            opp_tries.groupby(["origin", "phases"]).size().reset_index(name="count")
+        )
+
+        # Combine end_possession and origin for clear x-axis labels
+        # Example label: "Kick Receipt<br>Denmark"
+        grouped["x_label"] = grouped["origin"]
+
+        # Convert phases to string for categorical color discrete mapping
+        grouped["phases"] = grouped["phases"].astype(int).astype(str)
+
+        # Define color palette matching the design (1: Solid Red, 2: Light Red/Pink, 3: Brown/Taupe)
+        color_map = {"1": "#FF0000", "2": "#FF9999", "3": "#AA8888", "4+": "#666666"}
+
+        # --- 2. BUILD PLOTLY CHART ---
+        fig = px.bar(
+            grouped,
+            x="x_label",
+            y="count",
+            color="phases",
+            text="count",
+            title=f"<b>{opponent_name}</b>",
+            color_discrete_map=color_map,
+            barmode="stack",
+            category_orders={"phases": sorted(grouped["phases"].unique())},
+        )
+
+        # --- 3. CUSTOMIZE LAYOUT & STYLING ---
+        fig.update_traces(
+            textposition="inside",
+            insidetextanchor="middle",
+            textfont=dict(size=14, color="white", family="Arial Black"),
+        )
+
+        fig.update_layout(
+            xaxis_title=None,
+            yaxis_title=None,
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.25,
+                xanchor="center",
+                x=0.5,
+                title=dict(text="<b>Phases</b>"),
+            ),  # Reverse legend order to match bar stacking
+            font=dict(color="#333333"),
+            title=dict(x=0.5, xanchor="center", font=dict(size=20)),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            height=380,
+            margin=dict(l=20, r=20, t=50, b=80),
+        )
+
+        # Hide y-axis lines/labels for clean aesthetic
+        fig.update_yaxes(showticklabels=False, showgrid=False, zeroline=False)
+        fig.update_xaxes(showgrid=False)
+
+        # Render in Streamlit
+        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+else:
+    st.info("No try data available for the current filter selection.")
