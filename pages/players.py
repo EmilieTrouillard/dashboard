@@ -1,9 +1,8 @@
 import pandas as pd
 import streamlit as st
 
-from charts.tackles import tackle_completion_bar, tackle_completion_per_player
-from charts.tries import tries_sources_phases
-from charts.turnovers import turnover_reasons_phases
+from charts.tackles import tackle_completion_per_player
+
 from common import get_filtered_df
 
 css = """
