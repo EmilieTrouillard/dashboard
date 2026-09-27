@@ -7,43 +7,34 @@ import plotly.express as px
 TEAM = Literal["Denmark", "Opposition"]
 
 
-def tries_sources_phases(team: TEAM, df: pd.DataFrame, opponent_name: str):
-    team_name = "Denmark" if team == "Denmark" else opponent_name
+def turnover_reasons_phases(df: pd.DataFrame):
+    turnovers = df[df["event_type"] == "Turnover"].copy()
 
-    tries_df = df[df["event_type"] == "Try"].copy()
-
-    # Aggregate counts by Origin, and Phase
-    tries = tries_df[tries_df["end_possession"] == team]
-    if tries.empty:
+    if turnovers.empty:
         return
-    grouped = tries.groupby(["origin", "phases"]).size().reset_index(name="count")
+    grouped = turnovers.groupby(["reason", "outcome"]).size().reset_index(name="count")
 
     # Combine end_possession and origin for clear x-axis labels
     # Example label: "Kick Receipt<br>Denmark"
-    grouped["x_label"] = grouped["origin"]
+    grouped["x_label"] = grouped["reason"]
 
     # Convert phases to string for categorical color discrete mapping
-    grouped["phases"] = grouped["phases"].astype(int).astype(str)
+    grouped["outcome"] = grouped["outcome"]
 
     # Define color palette matching the design (1: Solid Red, 2: Light Red/Pink, 3: Brown/Taupe)
-    color_map = {
-        "1": "#FF0000",
-        "2": "#FF9999",
-        "3": "#AA8888",
-        "4+": "#666666",
-    }
+    color_map = {"Won": "#FF0000", "Lost": "#4A0404"}
 
     # --- 2. BUILD PLOTLY CHART ---
     fig = px.bar(
         grouped,
         x="x_label",
         y="count",
-        color="phases",
+        color="outcome",
         text="count",
-        title=f"Tries Sources and Phases - <b>{team_name}</b>",
+        title="<b>Turnovers</b>",
         color_discrete_map=color_map,
         barmode="stack",
-        category_orders={"phases": sorted(grouped["phases"].unique())},
+        category_orders={"outcome": sorted(grouped["outcome"].unique(), reverse=True)},
     )
 
     # --- 3. CUSTOMIZE LAYOUT & STYLING ---
@@ -58,12 +49,7 @@ def tries_sources_phases(team: TEAM, df: pd.DataFrame, opponent_name: str):
         yaxis_title=None,
         showlegend=True,
         legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.25,
-            xanchor="center",
-            x=0.5,
-            title=dict(text="<b>Phases</b>"),
+            orientation="h", yanchor="top", y=-0.25, xanchor="center", x=0.5, title=None
         ),
         font=dict(color="#333333"),
         title=dict(x=0.5, xanchor="center", font=dict(size=20)),

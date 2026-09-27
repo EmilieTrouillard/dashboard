@@ -5,6 +5,7 @@ import plotly.express as px
 
 from charts.tackles import tackle_completion_bar
 from charts.tries import tries_sources_phases
+from charts.turnovers import turnover_reasons_phases
 from common import get_filtered_df
 
 # from common import df_filtered
@@ -24,6 +25,9 @@ css = """
     background-color: #FFFFFF !important;
 }
 .st-key-my_white_containergame4 {
+    background-color: #FFFFFF !important;
+}
+.st-key-my_white_containergame5 {
     background-color: #FFFFFF !important;
 }
 """
@@ -252,7 +256,6 @@ for i, item in enumerate(metrics_data):
         )
 st.markdown("---")
 
-st.subheader("Try Source & Phases", text_alignment="center")
 col1, col2 = st.columns([1, 1])
 with col1:
     fig = tries_sources_phases("Denmark", df_filtered, opponent_name)
@@ -271,13 +274,19 @@ with col2:
                 fig, use_container_width=True, config={"displayModeBar": False}
             )
 
-col1, col2, col3 = st.columns([1, 1, 1])
+col1, col2 = st.columns([1, 1])
 with col1:
     with st.container(border=True, key="my_white_containergame3"):
         fig = tackle_completion_bar("Denmark", df_filtered, opponent_name)
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
-with col2:
     with st.container(border=True, key="my_white_containergame4"):
         fig = tackle_completion_bar("Opposition", df_filtered, opponent_name)
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+with col2:
+    with st.container(border=True, key="my_white_containergame5"):
+        fig = turnover_reasons_phases(df_filtered)
+        if fig is not None:
+            st.plotly_chart(
+                fig, use_container_width=True, config={"displayModeBar": False}
+            )

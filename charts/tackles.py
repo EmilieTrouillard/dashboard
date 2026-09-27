@@ -43,7 +43,7 @@ def tackle_completion_bar(team: TEAM, df: pd.DataFrame, opponent_name: str):
     fig.update_layout(
         barmode="stack",
         title=dict(
-            text=f"<b>Tackle Completion {team_name}</b>",
+            text=f"<b>Tackle Completion - {team_name}</b>",
             x=0.5,
             xanchor="center",
             font=dict(size=18, color="#111827"),
@@ -69,7 +69,7 @@ def tackle_completion_bar(team: TEAM, df: pd.DataFrame, opponent_name: str):
             itemdoubleclick=False,
             traceorder="normal",
         ),
-        height=200,
+        height=120,
         margin=dict(l=10, r=10, t=40, b=40),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
