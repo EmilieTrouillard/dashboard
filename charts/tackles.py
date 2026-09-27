@@ -2,6 +2,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from typing import Literal
 import pandas as pd
+import plotly.express as px
 
 TEAM = Literal["Denmark", "Opposition"]
 
@@ -62,16 +63,81 @@ def tackle_completion_bar(team: TEAM, df: pd.DataFrame, opponent_name: str):
         legend=dict(
             orientation="h",
             yanchor="top",
-            y=-0.3,
+            y=-1.0,
             xanchor="center",
             x=0.5,
             itemclick=False,
             itemdoubleclick=False,
             traceorder="normal",
         ),
-        height=120,
+        height=140,
         margin=dict(l=10, r=10, t=40, b=40),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
+    )
+    return fig
+
+
+def tackle_completion_per_player(df: pd.DataFrame):
+    tackles = df[df["event_type"] == "Tackle"].copy()
+    if tackles.empty:
+        return
+    grouped = (
+        tackles.groupby(["player", "outcome"])
+        .size()
+        .reset_index(name="count")
+        .sort_values(by=["player", "outcome"])
+    )
+
+    # Calculate total tackles per player
+    total_tackles_per_player = (
+        grouped.groupby("player")["count"].sum().reset_index(name="total_count")
+    )
+
+    # Merge total counts back to the grouped DataFrame
+    grouped = pd.merge(grouped, total_tackles_per_player, on="player")
+    grouped["percentage"] = (grouped["count"] / grouped["total_count"]) * 100
+
+    # Define color palette matching the design (1: Solid Red, 2: Light Red/Pink, 3: Brown/Taupe)
+    color_map = {
+        "Completed": "#FF1E1E",
+        "Missed": "#4A0404",
+        "Ineffective": "#9CA3AF",
+    }
+
+    fig = px.bar(
+        grouped,
+        x="player",
+        y="count",
+        color="outcome",
+        text=[
+            f"{i} <b>{j:.0f}%</b>"
+            for i, j in zip(grouped["count"], grouped["percentage"])
+        ],
+        title="<b>Tackle Completion per Player</b>",
+        color_discrete_map=color_map,
+        barmode="stack",
+        category_orders={"outcome": sorted(grouped["outcome"].unique())},
+    )
+
+    fig.update_traces(
+        textposition="inside",
+        insidetextanchor="middle",
+        textfont=dict(size=13, color="white"),
+    )
+
+    fig.update_layout(
+        xaxis_title=None,
+        yaxis_title=None,
+        showlegend=True,
+        legend=dict(
+            orientation="h", yanchor="top", y=-0.25, xanchor="center", x=0.5, title=None
+        ),
+        font=dict(color="#333333"),
+        title=dict(x=0.5, xanchor="center", font=dict(size=20)),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        height=400,
+        margin=dict(l=20, r=20, t=50, b=80),
     )
     return fig

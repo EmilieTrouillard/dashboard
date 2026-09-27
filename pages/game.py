@@ -1,14 +1,10 @@
-from pathlib import Path
 import pandas as pd
 import streamlit as st
-import plotly.express as px
 
 from charts.tackles import tackle_completion_bar
 from charts.tries import tries_sources_phases
 from charts.turnovers import turnover_reasons_phases
 from common import get_filtered_df
-
-# from common import df_filtered
 
 st.set_page_config(
     page_title="Game Overview",
@@ -262,31 +258,25 @@ with col1:
     if fig is not None:
         with st.container(border=True, key="my_white_containergame1"):
 
-            st.plotly_chart(
-                fig, use_container_width=True, config={"displayModeBar": False}
-            )
+            st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 with col2:
     fig = tries_sources_phases("Opposition", df_filtered, opponent_name)
     if fig is not None:
         with st.container(border=True, key="my_white_containergame2"):
 
-            st.plotly_chart(
-                fig, use_container_width=True, config={"displayModeBar": False}
-            )
+            st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 
 col1, col2 = st.columns([1, 1])
 with col1:
     with st.container(border=True, key="my_white_containergame3"):
         fig = tackle_completion_bar("Denmark", df_filtered, opponent_name)
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 
     with st.container(border=True, key="my_white_containergame4"):
         fig = tackle_completion_bar("Opposition", df_filtered, opponent_name)
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 with col2:
     with st.container(border=True, key="my_white_containergame5"):
         fig = turnover_reasons_phases(df_filtered)
         if fig is not None:
-            st.plotly_chart(
-                fig, use_container_width=True, config={"displayModeBar": False}
-            )
+            st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})

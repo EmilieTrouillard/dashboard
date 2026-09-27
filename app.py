@@ -65,15 +65,17 @@ tournament_info = (
 # # -----------------------------------------------------------------------------
 
 
-pages = {
-    "Game": [
-        st.Page("pages/kpis.py", title="KPIs"),
-        st.Page("pages/game.py", title="Game Data Overview"),
-    ],
-    "Players": [],
-}
+# pages = {
+#     "Game": [
+#         st.Page("pages/kpis.py", title="KPIs"),
+#         st.Page("pages/game.py", title="Game Data Overview"),
+#         st.Page("pages/players.py", title="Players"),
+#     ],
+#     "Players": [],
+# }
 pages_list = [
     st.Page("pages/kpis.py", title="KPIs"),
     st.Page("pages/game.py", title="Game Data Overview"),
+    st.Page("pages/players.py", title="Players"),
 ]
 st.navigation(pages_list, position="top").run()
