@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from streamlit.errors import StreamlitDefaultNotInOptionsError
 
 
 def update_filters():
@@ -48,21 +49,6 @@ def get_filtered_df():
 
     df_filtered = df_raw.copy()
 
-    # Filter: Opponent
-    selected_opp = []
-    if "opposition" in df_filtered.columns:
-        opponents = [x for x in df_filtered["opposition"].dropna().unique().tolist()]
-        selected_opp = st.sidebar.multiselect(
-            "Opponent",
-            opponents,
-            select_all=True,
-            default=st.session_state.get("opponent"),
-            on_change=update_filters,
-        )
-        st.session_state["opponent"] = selected_opp
-        if selected_opp:
-            df_filtered = df_filtered[df_filtered["opposition"].isin(selected_opp)]
-
     # Filter: Tournament
     selected_tournament = []
     if "tournament" in df_filtered.columns:
@@ -79,6 +65,29 @@ def get_filtered_df():
             df_filtered = df_filtered[
                 df_filtered["tournament"].isin(selected_tournament)
             ]
+    # Filter: Opponent
+    selected_opp = []
+    if "opposition" in df_filtered.columns:
+        opponents = [x for x in df_filtered["opposition"].dropna().unique().tolist()]
+        try:
+            selected_opp = st.sidebar.multiselect(
+                "Opponent",
+                opponents,
+                select_all=True,
+                default=st.session_state.get("opponent"),
+                on_change=update_filters,
+            )
+        except StreamlitDefaultNotInOptionsError:
+            selected_opp = st.sidebar.multiselect(
+                "Opponent",
+                opponents,
+                select_all=True,
+                on_change=update_filters,
+            )
+        st.session_state["opponent"] = selected_opp
+        if selected_opp:
+            df_filtered = df_filtered[df_filtered["opposition"].isin(selected_opp)]
+
     return df_filtered
 
 
