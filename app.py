@@ -77,5 +77,6 @@ pages_list = [
     st.Page("pages/kpis.py", title="KPIs"),
     st.Page("pages/game.py", title="Game Data Overview"),
     st.Page("pages/players.py", title="Players"),
+    st.Page("pages/possessions.py", title="Possessions"),
 ]
 st.navigation(pages_list, position="top").run()

@@ -1,10 +1,8 @@
 import plotly.graph_objects as go
 import streamlit as st
-from typing import Literal
 import pandas as pd
 import plotly.express as px
-
-TEAM = Literal["Denmark", "Opposition"]
+from .common import TEAM
 
 
 def tackle_completion_bar(team: TEAM, df: pd.DataFrame, opponent_name: str):
