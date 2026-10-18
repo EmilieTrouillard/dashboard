@@ -32,4 +32,4 @@ st.title("Players Data")
 fig = tackle_completion_per_player(df_filtered)
 if fig is not None:
     with st.container(border=True, key="my_white_containerplayers1"):
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")

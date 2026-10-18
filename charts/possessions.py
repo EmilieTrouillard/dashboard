@@ -7,15 +7,6 @@ import plotly.express as px
 from .common import TEAM
 
 
-# Define styling function for the Total row
-def highlight_total(row):
-    if row["Phases"] == "Total":
-        return [
-            "background-color: #f7f9fa; font-weight: bold; border-top: 2px solid #d1d5db;"
-        ] * len(row)
-    return [""] * len(row)
-
-
 def aggregate_events(df, metric_name):
     if df is None or df.empty:
         return pd.DataFrame(columns=["phases", metric_name])
@@ -24,7 +15,7 @@ def aggregate_events(df, metric_name):
     return agg
 
 
-def possessions_table(df: pd.DataFrame, team: TEAM):
+def possessions_sources_agg_df(df: pd.DataFrame, team: TEAM):
     possessions = df[
         (
             df["event_type"].isin(
@@ -54,8 +45,84 @@ def possessions_table(df: pd.DataFrame, team: TEAM):
                 ]
             )
         )
-        & (df["original_possession"] == team)
+        & (df["end_possession"] == team)
     ]
+    # Aggregate data to count the number of events by type and original possession
+    agg_df = (
+        possessions.groupby(["event_type", "original_possession"])
+        .size()
+        .reset_index(name="count")
+    )
+    if team == "Opposition":
+        agg_df.loc[agg_df["event_type"] == "Kick Off", "event_type"] = "temp"
+        agg_df.loc[agg_df["event_type"] == "Kick Receipt", "event_type"] = "Kick Off"
+        agg_df.loc[agg_df["event_type"] == "temp", "event_type"] = "Kick Receipt"
+    max_count = agg_df.groupby("event_type")["count"].sum().reset_index()["count"].max()
+    return agg_df, max_count
+
+
+def possessions_sources_chart(agg_df: pd.DataFrame, max_range: int):
+
+    totals = agg_df.groupby("event_type")["count"].sum().reset_index()
+    sorted_events = totals.sort_values(by="count", ascending=False)[
+        "event_type"
+    ].tolist()
+
+    # Create the grouped bar chart with Plotly Express
+    fig = px.bar(
+        agg_df,
+        x="event_type",
+        y="count",
+        color="original_possession",
+        barmode="stack",
+        text="count",  # To display values on the bars if needed
+        category_orders={
+            "event_type": sorted_events,
+            "original_possession": ["Denmark", "Opposition"],
+        },  # Sort by highest bar
+        color_discrete_map={
+            "Denmark": "#ff0000",  # Bright red for Denmark
+            "Opposition": "#3b0a0a",  # Dark brown for Opposition
+        },
+    )
+
+    # Display values cleanly inside/above the bars
+    fig.update_traces(textposition="inside", textfont_color="white")
+
+    # Customize layout (title, subtitle, legend, grid)
+    fig.update_layout(
+        title={
+            "text": "<b>Possession Sources</b>",
+            "x": 0.5,
+            "xanchor": "center",
+        },
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        xaxis_title="",
+        yaxis_title="",
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.25,
+            xanchor="center",
+            x=0.5,
+            title=dict(text="Original Possession"),
+        ),
+        xaxis=dict(showgrid=False),
+        yaxis=dict(
+            showgrid=True,
+            gridcolor="#f3f4f6",
+            showticklabels=False,
+            range=[0, max_range],
+        ),
+        bargap=0.2,
+        bargroupgap=0.05,
+    )
+    return fig
+
+
+def possessions_outcome_table(df: pd.DataFrame, team: TEAM):
+
     df_team = df[df["original_possession"] == team]
     df_tries = df_team[
         (df_team["event_type"] == "Try") & (df_team["end_possession"] == team)
@@ -104,7 +171,7 @@ def possessions_table(df: pd.DataFrame, team: TEAM):
         df_penalties_against_agg,
     ]
 
-    # 2. Merge all DataFrames on the "phases" column using an outer join
+    # Merge all DataFrames on the "phases" column using an outer join
     merged_df = reduce(
         lambda left, right: pd.merge(left, right, on="phases", how="outer"), dfs
     )
@@ -122,50 +189,75 @@ def possessions_table(df: pd.DataFrame, team: TEAM):
     # Fill NaNs with 0 in numeric columns so we can safely calculate and cast to int
     filled_df = merged_df.copy()
     filled_df[numeric_cols] = filled_df[numeric_cols].fillna(0)
-
-    # Convert numeric columns to integers
     filled_df[numeric_cols] = filled_df[numeric_cols].astype(int)
 
-    # 3. Calculate the "Total" column (sum across each row)
-    filled_df["Total"] = filled_df[numeric_cols].sum(axis=1)
+    # --- TRANSPOSE TABLE ---
+    # Set 'phases' as index and transpose so events become rows and phases become columns
+    transposed = filled_df.set_index("phases").T
 
-    # 4. Calculate the "Total" row (sum across each column)
-    total_row = filled_df[numeric_cols].sum(numeric_only=True)
-    total_row["phases"] = "Total"
-    total_row["Total"] = filled_df["Total"].sum()
+    # Calculate the "Total" column (sum across phases for each event)
+    transposed["Total"] = transposed.sum(axis=1)
 
-    # Append the "Total" row to the DataFrame
-    total_df = pd.DataFrame([total_row])
-    total_df[numeric_cols + ["Total"]] = total_df[numeric_cols + ["Total"]].astype(int)
+    # Calculate the "Total" row (sum across events for each phase)
+    transposed.loc["Total"] = transposed.sum(axis=0)
 
-    final_df = pd.concat([filled_df, total_df], ignore_index=True)
+    # Name index and reset to turn it into a regular column
+    transposed.index.name = "Phases"
+    final_df = transposed.reset_index()
 
-    # 5. Format for display: turn 0s into empty strings for inner cells, keep 0 for Totals
+    # Format for display: turn 0s into empty strings for inner cells, keep 0 for Totals
     display_df = final_df.copy()
+    phase_cols = [col for col in display_df.columns if col not in ["Phases", "Total"]]
 
-    for col in numeric_cols + ["Total"]:
+    for col in phase_cols + ["Total"]:
         display_df[col] = display_df[col].astype(str)
-        display_df.loc[display_df["phases"] != "Total", col] = display_df.loc[
-            display_df["phases"] != "Total", col
+        display_df.loc[display_df["Phases"] != "Total", col] = display_df.loc[
+            display_df["Phases"] != "Total", col
         ].replace({"0": ""})
 
-    display_df.loc[display_df["phases"] == "Total", numeric_cols + ["Total"]] = (
-        display_df.loc[
-            display_df["phases"] == "Total", numeric_cols + ["Total"]
-        ].replace({"": "0"})
+    display_df.loc[display_df["Phases"] == "Total", phase_cols + ["Total"]] = (
+        display_df.loc[display_df["Phases"] == "Total", phase_cols + ["Total"]].replace(
+            {"": "0"}
+        )
     )
 
-    # Rename column "phases" to "Phases"
-    display_df = display_df.rename(columns={"phases": "Phases"})
+    # Define row-specific styling function with placeholder colors
+    def style_rows(row):
+        event_name = row["Phases"]
+
+        # Placeholder colors for each row (edit these hex codes as you prefer)
+        row_colors = {
+            "Tries Scored": "#FF1E1E",
+            "Penalties For": "#CA0707",
+            "Set Pieces Kept": "#700505",
+            "Open Play Kicks": "#030201",
+            "Turnovers Lost": "#575656",
+            "Penalties Against": "#9b9b9b",
+            "Total": "#111827",  # Dark Gray/Black for Total
+        }
+
+        color = row_colors.get(event_name, "#111827")
+
+        if event_name == "Total":
+            return [
+                f"background-color: #f7f9fa; font-weight: bold; border-top: 2px solid #d1d5db; color: {color};"
+            ] * len(row)
+        else:
+            return [
+                (
+                    f"color: {color}; font-weight: 500;"
+                    if col not in ["Phases", "Total"]
+                    else f"color: {color}; font-weight: bold;"
+                )
+                for col in row.index
+            ]
 
     # Apply styling: white background, clean borders, center-aligned text
     styled_df = (
-        display_df.style.apply(highlight_total, axis=1)
+        display_df.style.apply(style_rows, axis=1)
         .set_properties(
             **{
                 "background-color": "#FFFFFF",
-                "color": "#111827",
-                "text-align": "center",
                 "border-color": "#e5e7eb",
                 "padding": "8px 12px",
             }
@@ -175,7 +267,7 @@ def possessions_table(df: pd.DataFrame, team: TEAM):
                 {
                     "selector": "th",
                     "props": [
-                        ("background-color", "#f9fafb"),
+                        ("background-color", "#FFFFFF"),
                         ("color", "#374151"),
                         ("font-weight", "bold"),
                         ("text-align", "center"),
@@ -189,6 +281,25 @@ def possessions_table(df: pd.DataFrame, team: TEAM):
                         ("background-color", "#FFFFFF"),
                         ("border-collapse", "collapse"),
                         ("width", "100%"),
+                    ],
+                },
+                {
+                    # Center-align all regular table data cells by default
+                    "selector": "td",
+                    "props": [
+                        ("text-align", "center"),
+                    ],
+                },
+                {
+                    # Target the first column headers and cells to set width and left-align
+                    "selector": "th:first-child, td:first-child",
+                    "props": [
+                        (
+                            "min-width",
+                            "180px",
+                        ),  # Adjust this value if you need more/less space
+                        ("text-align", "left"),
+                        ("padding-left", "16px"),
                     ],
                 },
             ]
