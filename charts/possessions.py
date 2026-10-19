@@ -1,6 +1,4 @@
-import plotly.graph_objects as go
-import streamlit as st
-from typing import Literal
+from typing import Tuple
 from functools import reduce
 import pandas as pd
 import plotly.express as px
@@ -15,7 +13,9 @@ def aggregate_events(df, metric_name):
     return agg
 
 
-def possessions_sources_agg_df(df: pd.DataFrame, team: TEAM):
+def possessions_sources_agg_df(
+    df: pd.DataFrame, team: TEAM
+) -> Tuple[pd.DataFrame, int, int, int]:
     possessions = df[
         (
             df["event_type"].isin(
@@ -47,6 +47,8 @@ def possessions_sources_agg_df(df: pd.DataFrame, team: TEAM):
         )
         & (df["end_possession"] == team)
     ]
+
+    tries_count = len(df[(df["event_type"] == "Try") & (df["end_possession"] == team)])
     # Aggregate data to count the number of events by type and original possession
     agg_df = (
         possessions.groupby(["event_type", "original_possession"])
@@ -58,7 +60,8 @@ def possessions_sources_agg_df(df: pd.DataFrame, team: TEAM):
         agg_df.loc[agg_df["event_type"] == "Kick Receipt", "event_type"] = "Kick Off"
         agg_df.loc[agg_df["event_type"] == "temp", "event_type"] = "Kick Receipt"
     max_count = agg_df.groupby("event_type")["count"].sum().reset_index()["count"].max()
-    return agg_df, max_count
+    total_count = agg_df["count"].sum()
+    return agg_df, max_count, total_count, tries_count
 
 
 def possessions_sources_chart(agg_df: pd.DataFrame, max_range: int):

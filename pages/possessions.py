@@ -5,6 +5,7 @@ from charts.possessions import (
     possessions_sources_chart,
     possessions_sources_agg_df,
 )
+from charts.score import display_score
 from common import get_filtered_df
 
 st.set_page_config(
@@ -34,15 +35,67 @@ st.html(f"<style>{css}</style>")
 st.title("Possessions")
 
 df_filtered = get_filtered_df()
+agg_df_dk, max_dk, total_dk, tries_dk = possessions_sources_agg_df(
+    df_filtered, "Denmark"
+)
+agg_df_op, max_op, total_op, tries_op = possessions_sources_agg_df(
+    df_filtered, "Opposition"
+)
+max_range = max(max_dk, max_op)
 
+score_html = display_score("Possessions", total_dk, total_op)
+col_1, col_2, col_3 = st.columns([0.5, 1, 0.5])
+with col_1:
+    st.markdown(
+        """
+    <style>
+    div[data-testid="stMetric"] {
+        background-color: #e7e6e4;
+        padding: 15px;
+        border-radius: 8px;
+    }
+    /* Move the label below the value and style it */
+    div[data-testid="stMetric"] label {
+        order: 2;
+        font-size: 14px;
+        color: #4b5563;
+        text-align: center;
+        display: block;
+        width: 100%;
+    }
+    /* Style the main value number */
+    div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
+        order: 1;
+        font-size: 32px;
+        font-weight: bold;
+        color: #111827;
+        text-align: center;
+    }
+    </style>
+    """,
+        unsafe_allow_html=True,
+    )
+
+    # Your metric card display
+    st.metric(
+        label="Possession conversion rate",
+        value=f"{int(tries_dk / total_dk * 100) if total_dk > 0 else '--'}%",
+    )
+with col_2:
+    st.markdown(score_html, unsafe_allow_html=True)
+with col_3:
+
+    # Your metric card display
+    st.metric(
+        label="Possession conversion rate",
+        value=f"{int(tries_op / total_op * 100) if total_op > 0 else '--'}%",
+    )
 col1, col2 = st.columns([1, 1])
 
 with col1:
     st.subheader("Denmark", width="stretch", text_alignment="center")
     with st.container(border=True, key="my_white_containerpossessions3"):
-        agg_df_dk, max_dk = possessions_sources_agg_df(df_filtered, "Denmark")
-        agg_df_op, max_op = possessions_sources_agg_df(df_filtered, "Opposition")
-        max_range = max(max_dk, max_op)
+
         fig = possessions_sources_chart(agg_df_dk, max_range)
         st.plotly_chart(fig, width="stretch")
     with st.container(border=True, key="my_white_containerpossessions1"):
