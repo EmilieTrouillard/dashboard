@@ -44,6 +44,20 @@ agg_df_op, max_op, total_op, tries_op = possessions_sources_agg_df(
 max_range = max(max_dk, max_op)
 
 score_html = display_score("Possessions", total_dk, total_op)
+col1, col2 = st.columns([1, 1])
+
+with col1:
+    st.subheader("Denmark", width="stretch", text_alignment="center")
+with col2:
+    opponent_name = (
+        df_filtered["opposition"].iloc[0]
+        if "opposition" in df_filtered.columns
+        and not df_filtered.empty
+        and len(st.session_state.get("opponent") or []) == 1
+        else "Opposition"
+    )
+    st.subheader(opponent_name, width="stretch", text_alignment="center")
+
 col_1, col_2, col_3 = st.columns([0.5, 1, 0.5])
 with col_1:
     st.markdown(
@@ -84,7 +98,7 @@ with col_1:
 with col_2:
     st.markdown(score_html, unsafe_allow_html=True)
 with col_3:
-
+    st.markdown("")
     # Your metric card display
     st.metric(
         label="Possession conversion rate",
@@ -93,7 +107,6 @@ with col_3:
 col1, col2 = st.columns([1, 1])
 
 with col1:
-    st.subheader("Denmark", width="stretch", text_alignment="center")
     with st.container(border=True, key="my_white_containerpossessions3"):
 
         fig = possessions_sources_chart(agg_df_dk, max_range)
@@ -108,14 +121,6 @@ with col1:
         st.dataframe(styled_df, width="stretch", hide_index=True)
 
 with col2:
-    opponent_name = (
-        df_filtered["opposition"].iloc[0]
-        if "opposition" in df_filtered.columns
-        and not df_filtered.empty
-        and len(st.session_state.get("opponent") or []) == 1
-        else "Opposition"
-    )
-    st.subheader(opponent_name, width="stretch", text_alignment="center")
     with st.container(border=True, key="my_white_containerpossessions4"):
         fig = possessions_sources_chart(agg_df_op, max_range)
         st.plotly_chart(fig, width="stretch")

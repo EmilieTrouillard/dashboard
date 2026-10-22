@@ -59,8 +59,10 @@ def possessions_sources_agg_df(
         agg_df.loc[agg_df["event_type"] == "Kick Off", "event_type"] = "temp"
         agg_df.loc[agg_df["event_type"] == "Kick Receipt", "event_type"] = "Kick Off"
         agg_df.loc[agg_df["event_type"] == "temp", "event_type"] = "Kick Receipt"
-    max_count = agg_df.groupby("event_type")["count"].sum().reset_index()["count"].max()
-    total_count = agg_df["count"].sum()
+    max_count: int = (
+        agg_df.groupby("event_type")["count"].sum().reset_index()["count"].max()
+    )
+    total_count: int = int(agg_df["count"].sum())
     return agg_df, max_count, total_count, tries_count
 
 

@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 
 from charts.tackles import tackle_completion_per_player
+from charts.ball_carries import ball_carries_per_player
 
 from common import get_filtered_df
 
@@ -32,4 +33,9 @@ st.title("Players Data")
 fig = tackle_completion_per_player(df_filtered)
 if fig is not None:
     with st.container(border=True, key="my_white_containerplayers1"):
+        st.plotly_chart(fig, width="stretch")
+
+fig = ball_carries_per_player(df_filtered)
+if fig is not None:
+    with st.container(border=True, key="my_white_containerplayers2"):
         st.plotly_chart(fig, width="stretch")

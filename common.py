@@ -45,7 +45,7 @@ def get_filtered_df():
         st.stop()
 
     # --- INTERACTIVE FILTERS (SIDEBAR) ---
-    st.sidebar.header("Some name for the filters")
+    st.sidebar.header("Game Filters")
 
     df_filtered = df_raw.copy()
 
@@ -87,8 +87,61 @@ def get_filtered_df():
         st.session_state["opponent"] = selected_opp
         if selected_opp:
             df_filtered = df_filtered[df_filtered["opposition"].isin(selected_opp)]
+    # --- DISPLAY SELECTED GAMES (FORMATTED) ---
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("Selected Games")
+
+    if not df_filtered.empty:
+        has_opp = "opposition" in df_filtered.columns
+        has_tourn = "tournament" in df_filtered.columns
+        has_stage = "stage" in df_filtered.columns
+
+        # Group by source_filename to get unique games, or fallback to unique combinations
+        if "source_filename" in df_filtered.columns:
+            game_df = (
+                df_filtered.groupby("source_filename", dropna=False)
+                .first()
+                .reset_index()
+            )
+        else:
+            subset_cols = [
+                c
+                for c in ["opposition", "tournament", "stage"]
+                if c in df_filtered.columns
+            ]
+            game_df = (
+                df_filtered.drop_duplicates(subset=subset_cols)
+                if subset_cols
+                else df_filtered
+            )
+
+        game_labels = []
+        for _, row in game_df.iterrows():
+            opp = (
+                str(row.get("opposition", "Unknown Opponent"))
+                if has_opp
+                else "Unknown Opponent"
+            )
+            tourn = (
+                str(row.get("tournament", "Unknown Tournament"))
+                if has_tourn
+                else "Unknown Tournament"
+            )
+            stage = str(row.get("stage", "")) if has_stage else ""
+
+            # Format as "Opposition - Tournament (stage)" or omit stage if empty/NaN
+            if stage and stage.lower() != "nan" and stage.strip() != "":
+                label = f"{tourn} - {opp} ({stage})"
+            else:
+                label = f"{tourn} - {opp}"
+
+            game_labels.append(label)
+
+        unique_games = sorted(list(set(game_labels)))
+        st.sidebar.caption(f"{len(unique_games)} game(s) matching filters")
+        for game in unique_games:
+            st.sidebar.text(f"• {game}")
+    else:
+        st.sidebar.caption("No games available")
 
     return df_filtered
-
-
-# df_filtered = get_filtered_df()

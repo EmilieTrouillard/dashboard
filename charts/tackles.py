@@ -112,7 +112,7 @@ def tackle_completion_per_player(df: pd.DataFrame):
             f"{i} <b>{j:.0f}%</b>"
             for i, j in zip(grouped["count"], grouped["percentage"])
         ],
-        title="<b>Tackle Completion per Player</b>",
+        title="<b>Tackle Completion</b>",
         color_discrete_map=color_map,
         barmode="stack",
         category_orders={"outcome": sorted(grouped["outcome"].unique())},
