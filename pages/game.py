@@ -4,6 +4,8 @@ import streamlit as st
 from charts.tackles import tackle_completion_bar
 from charts.tries import tries_sources_phases
 from charts.turnovers import turnover_reasons_phases
+from charts.common import opponent_name
+from charts.set_pieces import set_pieces_rates
 from common import get_filtered_df
 
 st.set_page_config(
@@ -80,13 +82,7 @@ st.markdown(
 
 # --- CALCULATE OR EXTRACT METRICS ---
 # Safely pulls data from df_filtered or falls back to sample values matching screenshot 2
-opponent_name = (
-    df_filtered["opposition"].iloc[0]
-    if "opposition" in df_filtered.columns
-    and not df_filtered.empty
-    and len(st.session_state.get("opponent") or []) == 1
-    else "Opposition"
-)
+opponent_name = opponent_name(df_filtered)
 tries = (
     df_filtered[df_filtered["event_type"] == "Try"]
     if "event_type" in df_filtered.columns
@@ -266,7 +262,13 @@ with col2:
 
             st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 
-col1, col2 = st.columns([1, 1])
+col1, col2 = st.columns([2, 3], vertical_alignment="center")
+with col2:
+    with st.container(border=True, key="my_white_containergame5"):
+        fig = turnover_reasons_phases(df_filtered)
+        if fig is not None:
+            st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+
 with col1:
     with st.container(border=True, key="my_white_containergame3"):
         fig = tackle_completion_bar("Denmark", df_filtered, opponent_name)
@@ -275,8 +277,89 @@ with col1:
     with st.container(border=True, key="my_white_containergame4"):
         fig = tackle_completion_bar("Opposition", df_filtered, opponent_name)
         st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
-with col2:
-    with st.container(border=True, key="my_white_containergame5"):
-        fig = turnover_reasons_phases(df_filtered)
-        if fig is not None:
-            st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+
+set_pieces_rates = set_pieces_rates(df_filtered)
+st.markdown(
+    """
+<style>
+div[data-testid="stMetric"] {
+    background-color: #e7e6e4;
+    padding: 15px;
+    border-radius: 8px;
+}
+/* Move the label below the value and style it */
+div[data-testid="stMetric"] label {
+    order: 2;
+    font-size: 14px;
+    color: #4b5563;
+    text-align: center;
+    display: block;
+    width: 100%;
+}
+/* Style the main value number */
+div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
+    order: 1;
+    font-size: 32px;
+    font-weight: bold;
+    color: #111827;
+    text-align: center;
+}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+col_1, _ = st.columns([1, 1])
+
+
+def retention_emoji(value: int | None) -> str | None:
+    if value is None:
+        return None
+    if value >= 80:
+        return "🟢"
+    if value >= 50:
+        return "🟠"
+    return "🔴"
+
+
+def steal_emoji(value: int | None) -> str | None:
+    if value is None:
+        return None
+    if value >= 50:
+        return "🟢"
+    if value >= 25:
+        return "🟠"
+    return "🔴"
+
+
+with col_1:
+    st.subheader("Set Pieces Rates (Denmark)", width="stretch", text_alignment="center")
+    (
+        col1,
+        col2,
+    ) = st.columns([1, 1])
+    with col1:
+        scrum_retention_rate = set_pieces_rates["scrum_retention_rate"]
+        st.metric(
+            label="**Scrum** retention rate",
+            icon=retention_emoji(scrum_retention_rate),
+            value=f"{scrum_retention_rate if scrum_retention_rate is not None else '--'}%",
+        )
+        scrum_steal_rate = set_pieces_rates["scrum_steal_rate"]
+        st.metric(
+            label="**Scrum** steal rate",
+            icon=steal_emoji(scrum_steal_rate),
+            value=f"{scrum_steal_rate if scrum_steal_rate is not None else '--'}%",
+        )
+    with col2:
+        lineout_retention_rate = set_pieces_rates["lineout_retention_rate"]
+        st.metric(
+            label="**Lineout** retention rate",
+            icon=retention_emoji(lineout_retention_rate),
+            value=f"{lineout_retention_rate if lineout_retention_rate is not None else '--'}%",
+        )
+        lineout_steal_rate = set_pieces_rates["lineout_steal_rate"]
+        st.metric(
+            label="**Lineout** steal rate",
+            icon=steal_emoji(lineout_steal_rate),
+            value=f"{lineout_steal_rate if lineout_steal_rate is not None else '--'}%",
+        )

@@ -9,6 +9,7 @@ from streamlit.errors import StreamlitDefaultNotInOptionsError
 def update_filters():
     st.session_state["tournament"] = st.session_state.tournament
     st.session_state["opponent"] = st.session_state.opponent
+    st.session_state["stage"] = st.session_state.stage
 
 
 # --- LOAD DATA FROM THE 'data/' FOLDER ---
@@ -87,6 +88,29 @@ def get_filtered_df():
         st.session_state["opponent"] = selected_opp
         if selected_opp:
             df_filtered = df_filtered[df_filtered["opposition"].isin(selected_opp)]
+
+    # Filter: Stage
+    selected_stage = []
+    if "stage" in df_filtered.columns:
+        stages = [x for x in df_filtered["stage"].dropna().unique().tolist()]
+        try:
+            selected_stage = st.sidebar.multiselect(
+                "Stage",
+                stages,
+                select_all=True,
+                default=st.session_state.get("stage"),
+                on_change=update_filters,
+            )
+        except StreamlitDefaultNotInOptionsError:
+            selected_stage = st.sidebar.multiselect(
+                "Stage",
+                stages,
+                select_all=True,
+                on_change=update_filters,
+            )
+        st.session_state["stage"] = selected_stage
+        if selected_stage:
+            df_filtered = df_filtered[df_filtered["stage"].isin(selected_stage)]
     # --- DISPLAY SELECTED GAMES (FORMATTED) ---
     st.sidebar.markdown("---")
     st.sidebar.subheader("Selected Games")
@@ -138,7 +162,9 @@ def get_filtered_df():
             game_labels.append(label)
 
         unique_games = sorted(list(set(game_labels)))
-        st.sidebar.caption(f"{len(unique_games)} game(s) matching filters")
+        st.sidebar.caption(
+            f"{len(unique_games)} game{'s' if len(unique_games) > 1 else ''} matching filters"
+        )
         for game in unique_games:
             st.sidebar.text(f"• {game}")
     else:

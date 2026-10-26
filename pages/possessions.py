@@ -6,6 +6,7 @@ from charts.possessions import (
     possessions_sources_agg_df,
 )
 from charts.score import display_score
+from charts.common import opponent_name
 from common import get_filtered_df
 
 st.set_page_config(
@@ -49,13 +50,8 @@ col1, col2 = st.columns([1, 1])
 with col1:
     st.subheader("Denmark", width="stretch", text_alignment="center")
 with col2:
-    opponent_name = (
-        df_filtered["opposition"].iloc[0]
-        if "opposition" in df_filtered.columns
-        and not df_filtered.empty
-        and len(st.session_state.get("opponent") or []) == 1
-        else "Opposition"
-    )
+    opponent_name = opponent_name(df_filtered)
+
     st.subheader(opponent_name, width="stretch", text_alignment="center")
 
 col_1, col_2, col_3 = st.columns([0.5, 1, 0.5])
