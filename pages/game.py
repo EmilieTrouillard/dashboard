@@ -248,7 +248,7 @@ for i, item in enumerate(metrics_data):
         )
 st.markdown("---")
 
-col1, col2 = st.columns([1, 1])
+col1, col2 = st.columns([1, 1], vertical_alignment="center")
 with col1:
     fig = tries_sources_phases("Denmark", df_filtered, opponent_name)
     with st.container(border=True, key="my_white_containergame1"):
@@ -262,6 +262,12 @@ with col2:
         if fig is not None:
 
             st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
+        else:
+            st.subheader(
+                f"No tries data available for {opponent_name}",
+                width="stretch",
+                text_alignment="center",
+            )
 
 col1, col2 = st.columns([2, 3], vertical_alignment="center")
 with col2:
