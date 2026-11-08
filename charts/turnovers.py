@@ -60,6 +60,6 @@ def turnover_reasons_phases(df: pd.DataFrame):
     )
 
     # Hide y-axis lines/labels for clean aesthetic
-    fig.update_yaxes(showticklabels=False, showgrid=False, zeroline=False)
+    fig.update_yaxes(showticklabels=True, showgrid=False, zeroline=False)
     fig.update_xaxes(showgrid=False)
     return fig
