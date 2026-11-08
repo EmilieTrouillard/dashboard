@@ -74,6 +74,6 @@ def tries_sources_phases(team: TEAM, df: pd.DataFrame, opponent_name: str):
     )
 
     # Hide y-axis lines/labels for clean aesthetic
-    fig.update_yaxes(showticklabels=False, showgrid=False, zeroline=False)
+    fig.update_yaxes(showticklabels=True, showgrid=False, zeroline=False)
     fig.update_xaxes(showgrid=False)
     return fig
