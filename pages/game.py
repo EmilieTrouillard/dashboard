@@ -251,14 +251,15 @@ st.markdown("---")
 col1, col2 = st.columns([1, 1])
 with col1:
     fig = tries_sources_phases("Denmark", df_filtered, opponent_name)
-    if fig is not None:
-        with st.container(border=True, key="my_white_containergame1"):
+    with st.container(border=True, key="my_white_containergame1"):
+
+        if fig is not None:
 
             st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 with col2:
     fig = tries_sources_phases("Opposition", df_filtered, opponent_name)
-    if fig is not None:
-        with st.container(border=True, key="my_white_containergame2"):
+    with st.container(border=True, key="my_white_containergame2"):
+        if fig is not None:
 
             st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
 
