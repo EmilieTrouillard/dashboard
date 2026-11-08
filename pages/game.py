@@ -316,7 +316,7 @@ def retention_emoji(value: int | None) -> str | None:
         return None
     if value >= 80:
         return "🟢"
-    if value >= 50:
+    if value >= 60:
         return "🟠"
     return "🔴"
 
@@ -325,10 +325,10 @@ def steal_emoji(value: int | None) -> str | None:
     if value is None:
         return None
     if value >= 50:
-        return "🟢"
+        return "🦢"
     if value >= 25:
-        return "🟠"
-    return "🔴"
+        return "🟢"
+    return None
 
 
 with col_1:
