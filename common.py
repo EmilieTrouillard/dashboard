@@ -161,7 +161,8 @@ def get_filtered_df():
 
             game_labels.append(label)
 
-        unique_games = sorted(list(set(game_labels)))
+        # unique_games = sorted(list(set(game_labels)))
+        unique_games = sorted(game_labels)
         st.sidebar.caption(
             f"{len(unique_games)} game{'s' if len(unique_games) > 1 else ''} matching filters"
         )
